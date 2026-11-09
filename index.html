@@ -47,7 +47,7 @@ h1{
 .top-cards{
     display:grid;
     grid-template-columns:
-    repeat(auto-fit,minmax(200px,1fr));
+    repeat(auto-fit,minmax(220px,1fr));
     gap:20px;
     margin-bottom:20px;
 }
@@ -60,15 +60,32 @@ h1{
     margin-bottom:20px;
 }
 
+/* Destaque visual diferenciado para Investimentos e Metas */
+.card-investimentos {
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    border: 2px solid #16a34a;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);
+}
+
+.card-metas {
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+    border: 2px solid #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
 .kpi-label{
     color:var(--muted);
     font-size:13px;
+    font-weight: 600;
 }
+
+.card-investimentos .kpi-label { color: #15803d; }
+.card-metas .kpi-label { color: #1d4ed8; }
 
 .kpi-value{
     font-size:28px;
     font-weight:bold;
-    margin-top:4px;
+    margin-top:6px;
 }
 
 .filtros{
@@ -157,7 +174,7 @@ th,td{
 /* Módulos de investimentos e metas */
 .secao-titulo{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
-.form-grid label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:13px}
+.form-grid label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:13px;position:relative;}
 .form-grid input,.form-grid select{color:var(--text);background:#fff}
 .btn-secundario{background:#64748b}
 .btn-perigo{background:#dc2626}
@@ -172,6 +189,58 @@ th,td{
 .meta-linha:last-child{border-bottom:0}
 .meta-info{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .meta-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* Grid de seleção por tipo de investimento */
+.grid-tipos-investimento {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+}
+.btn-tipo-inv {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-tipo-inv:hover, .btn-tipo-inv.selecionado {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+
+/* Lista de autocomplete de Ações */
+.autocomplete-sugestoes {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: none;
+}
+.autocomplete-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.autocomplete-item:hover {
+    background: #f1f5f9;
+    color: var(--primary);
+    font-weight: 600;
+}
+
 @media(max-width:600px){body{padding:12px}.card{padding:16px}th,td{padding:8px;font-size:12px}}
 
 
@@ -230,23 +299,16 @@ th,td{
         </div>
     </div>
 
-    <div class="card">
-        <div class="kpi-label">Economia</div>
-        <div id="economiaTotal" class="kpi-value">
+    <div class="card card-investimentos">
+        <div class="kpi-label">📈 Patrimônio Investido</div>
+        <div id="investimentosVisaoTotal" class="kpi-value" style="color: #16a34a;">
             R$ 0,00
         </div>
     </div>
 
-    <div class="card">
-        <div class="kpi-label">Investimentos</div>
-        <div id="investimentosVisaoTotal" class="kpi-value">
-            R$ 0,00
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="kpi-label">Guardado em Metas</div>
-        <div id="metasVisaoTotal" class="kpi-value">
+    <div class="card card-metas">
+        <div class="kpi-label">🎯 Total em Metas</div>
+        <div id="metasVisaoTotal" class="kpi-value" style="color: #2563eb;">
             R$ 0,00
         </div>
     </div>
@@ -328,34 +390,91 @@ Limpar
 <div class="card" id="areaInvestimentos">
     <div class="secao-titulo">
         <h2>📈 Investimentos</h2>
-        <span class="kpi-label">Controle manual da carteira</span>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="btnAtualizarCotacoes" class="btn-acao" style="background:#0f766e;">🔄 Atualizar cotações da B3</button>
+        </div>
     </div>
     <div class="kpis-modulo">
         <div class="kpi-mini"><small>Patrimônio investido</small><strong id="totalSaldoInvestimentos">R$ 0,00</strong></div>
         <div class="kpi-mini"><small>Total aplicado líquido</small><strong id="totalAplicadoInvestimentos">R$ 0,00</strong></div>
         <div class="kpi-mini"><small>Resultado acumulado</small><strong id="resultadoInvestimentos">R$ 0,00 (0,00%)</strong></div>
     </div>
-    <div class="aviso-modulo">Atualize o saldo atual manualmente com o valor informado pela sua corretora ou instituição. A rentabilidade é calculada sobre o valor aplicado líquido.</div>
-    <h3 id="tituloFormInvestimento">Cadastrar investimento</h3>
-    <div class="form-grid">
-        <label>Nome do ativo<input id="invNome" type="text" placeholder="Ex.: Tesouro Selic 2029"></label>
-        <label>Instituição<input id="invInstituicao" type="text" placeholder="Banco ou corretora"></label>
-        <label>Tipo
-            <select id="invTipo">
-                <option>CDB</option><option>Tesouro Direto</option><option>Ações</option>
-                <option>Fundos imobiliários (FIIs)</option><option>ETFs</option>
-                <option>Fundos de investimento</option><option>Criptomoedas</option>
-                <option>Poupança</option><option>Outro</option>
-            </select>
-        </label>
-        <label>Valor aplicado (R$)<input id="invAplicado" type="number" min="0.01" step="0.01" placeholder="1000"></label>
-        <label>Saldo atual (R$)<input id="invSaldo" type="number" min="0" step="0.01" placeholder="1050"></label>
-        <label>Data da aplicação<input id="invData" type="date"></label>
+
+    <!-- BOTÃO INICIAL PARA EXIBIR FORMULÁRIO -->
+    <div style="margin: 15px 0;" id="boxNovoInvestimento">
+        <button id="btnNovoInvestimentoForm" style="max-width: 280px;">➕ Cadastrar novo investimento</button>
     </div>
-    <div class="form-grid">
-        <button id="btnSalvarInvestimento">Salvar investimento</button>
-        <button id="btnCancelarInvestimento" class="btn-secundario" type="button" style="display:none">Cancelar edição</button>
+
+    <!-- PASSO 1: ESCOLHA DO TIPO DE INVESTIMENTO -->
+    <div id="passoSelecaoTipo" class="card" style="display:none; background:#f8fafc; border: 1px dashed var(--primary);">
+        <h3 style="margin-bottom: 8px;">1. Selecione o tipo de investimento:</h3>
+        <div class="grid-tipos-investimento">
+            <button type="button" class="btn-tipo-inv" data-tipo="CDB">🏦 CDB</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="RDB">💳 RDB</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Tesouro Direto">🏛️ Tesouro Direto</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="LCI / LCA">🌾 LCI / LCA</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Ações">📊 Ações (B3)</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Fundos imobiliários (FIIs)">🏢 FIIs</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="ETFs">🌐 ETFs</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Criptomoedas">🪙 Criptomoedas</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Poupança">💰 Poupança</button>
+            <button type="button" class="btn-tipo-inv" data-tipo="Outro">📌 Outro</button>
+        </div>
+        <button id="btnFecharFormInv" class="btn-secundario" style="margin-top:10px; width:auto; padding: 6px 14px;">Cancelar</button>
     </div>
+
+    <!-- PASSO 2: CAMPOS DINÂMICOS DO INVESTIMENTO -->
+    <div id="passoCamposInvestimento" style="display:none;">
+        <h3 id="tituloFormInvestimento">2. Preencha os dados do investimento (<span id="lblTipoSelecionado" style="color:var(--primary);"></span>)</h3>
+        <div class="form-grid">
+            <label id="lblInvNome">Nome do ativo / Ticker
+                <input id="invNome" type="text" placeholder="Digite para buscar..." autocomplete="off">
+                <div id="sugestoesAcoes" class="autocomplete-sugestoes"></div>
+            </label>
+            <label>Instituição
+                <input id="invInstituicao" type="text" placeholder="Banco ou corretora">
+            </label>
+
+            <!-- CAMPOS ESPECÍFICOS PARA AÇÕES / FIIS / ETFS -->
+            <label id="campoQtdAcoes" style="display:none;">Quantidade de ações / cotas
+                <input id="invQtd" type="number" min="1" step="1" placeholder="Ex: 100">
+            </label>
+            <label id="campoPrecoMedio" style="display:none;">Preço Médio de Compra (R$)
+                <input id="invPrecoMedio" type="number" min="0.01" step="0.01" placeholder="Ex: 32.50">
+            </label>
+
+            <!-- CAMPO GERAL OU CALCULADO: VALOR APLICADO -->
+            <label>Valor investido total (R$)
+                <input id="invAplicado" type="number" min="0.01" step="0.01" placeholder="Calculado auto ou preenchido">
+            </label>
+
+            <!-- CAMPOS DINÂMICOS: RENDA FIXA (TIPO DE TAXA & CDI) -->
+            <label id="boxTipoTaxa" style="display:none;">Tipo de Rendimento
+                <select id="invTipoTaxa">
+                    <option value="aa">% a.a. (Pré-fixado)</option>
+                    <option value="cdi">% do CDI (Pós-fixado)</option>
+                </select>
+            </label>
+            <label id="campoTaxaJuros" style="display:none;"><span id="lblValorTaxa">Taxa (% a.a.)</span>
+                <input id="invTaxa" type="number" min="0" step="0.01" placeholder="Ex: 12.5 para 12.5% ou 110 para 110% CDI">
+            </label>
+            <label id="campoCDIBase" style="display:none;">CDI Atual (% a.a.)
+                <input id="invCDIBase" type="number" min="0" step="0.01" value="10.75" placeholder="Ex: 10.75">
+            </label>
+
+            <label>Saldo atual (R$)
+                <input id="invSaldo" type="number" min="0" step="0.01" placeholder="Calculado auto ou cotação B3">
+            </label>
+            <label>Data da aplicação
+                <input id="invData" type="date">
+            </label>
+        </div>
+        <div class="form-grid" style="margin-top:10px;">
+            <button id="btnSalvarInvestimento">Salvar investimento</button>
+            <button id="btnCancelarInvestimento" class="btn-secundario" type="button">Cancelar</button>
+        </div>
+    </div>
+
     <br>
     <h3>Registrar aporte ou resgate</h3>
     <div class="form-grid">
@@ -370,7 +489,7 @@ Limpar
     <h3>Carteira</h3>
     <div class="tabela-wrap">
         <table>
-            <thead><tr><th>Ativo</th><th>Tipo / Instituição</th><th>Aplicado</th><th>Saldo atual</th><th>Resultado</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Ativo</th><th>Tipo / Instituição</th><th>Aplicado</th><th>Rentab. / Detalhes</th><th>Saldo atual</th><th>Resultado</th><th>Ações</th></tr></thead>
             <tbody id="tabelaInvestimentos"></tbody>
         </table>
     </div>
@@ -472,8 +591,37 @@ let movimentacoesCache = [];
 let filtroMesInicializado = false;
 let metaEditandoId = null;
 let investimentoEditandoId = null;
+let tipoInvestimentoSelecionado = "";
 let investimentosCache = [];
 let metasCache = [];
+
+// Base de dados local para autocomplete das principais Ações e FIIs da B3
+const acoesB3Populares = [
+    { ticker: "BBAS3", nome: "Banco do Brasil" },
+    { ticker: "BBDC4", nome: "Bradesco PN" },
+    { ticker: "BBDC3", nome: "Bradesco ON" },
+    { ticker: "ITUB4", nome: "Itaú Unibanco" },
+    { ticker: "SANB11", nome: "Banco Santander" },
+    { ticker: "PETR4", nome: "Petrobras PN" },
+    { ticker: "PETR3", nome: "Petrobras ON" },
+    { ticker: "VALE3", nome: "Vale" },
+    { ticker: "MGLU3", nome: "Magazine Luiza" },
+    { ticker: "WEGE3", nome: "Weg" },
+    { ticker: "ABEV3", nome: "Ambev" },
+    { ticker: "RENT3", nome: "Localiza" },
+    { ticker: "BBSE3", nome: "BB Seguridade" },
+    { ticker: "CXSE3", nome: "Caixa Seguridade" },
+    { ticker: "TAEE11", nome: "Taesa" },
+    { ticker: "CPLE6", nome: "Copel" },
+    { ticker: "ELET3", nome: "Eletrobras" },
+    { ticker: "PRIO3", nome: "Prio (Petrorio)" },
+    { ticker: "HGLG11", nome: "FII CSHG Logística" },
+    { ticker: "KNCR11", nome: "FII Kinea Rendimentos" },
+    { ticker: "MXRF11", nome: "FII Maxi Renda" },
+    { ticker: "XPML11", nome: "FII XP Malls" },
+    { ticker: "BOVA11", nome: "ETF Ibovespa" },
+    { ticker: "IVVB11", nome: "ETF S&P500" }
+];
 
 
 function configurarFiltroMes(movimentacoes) {
@@ -708,18 +856,6 @@ const receitas =
         }
     );
 
-    document.getElementById(
-        'economiaTotal'
-    ).innerHTML =
-    (receitas-despesas)
-    .toLocaleString(
-        'pt-BR',
-        {
-            style:'currency',
-            currency:'BRL'
-        }
-    );
-
     // Atualiza os indicadores de Investimentos e Metas na 1ª página
     const totalInvestimentosVisao = (investimentos.data || []).reduce((s, i) => s + Number(i.saldo_atual || 0), 0);
     const totalMetasVisao = (metas.data || []).reduce((s, m) => s + Number(m.valor_atual || 0), 0);
@@ -833,14 +969,24 @@ function renderizarInvestimentos(investimentos, movimentos) {
 
     document.getElementById('tabelaInvestimentos').innerHTML = investimentos.length ? investimentos.map(inv => {
         const res = Number(inv.saldo_atual||0)-Number(inv.valor_aplicado||0);
+        let detalhe = '—';
+        if (inv.tipo_taxa === 'cdi') {
+            detalhe = `${inv.taxa_juros}% do CDI`;
+        } else if (inv.taxa_juros) {
+            detalhe = `${inv.taxa_juros}% a.a.`;
+        }
+        if (inv.quantidade && inv.quantidade > 0) detalhe = `${inv.quantidade} un.`;
+        
         return `<tr>
             <td><strong>${escaparHtml(inv.nome)}</strong><br><small>${inv.data_aplicacao ? new Date(inv.data_aplicacao+'T00:00:00').toLocaleDateString('pt-BR') : ''}</small></td>
             <td>${escaparHtml(inv.tipo)}<br><small>${escaparHtml(inv.instituicao||'—')}</small></td>
-            <td>${moeda(inv.valor_aplicado)}</td><td>${moeda(inv.saldo_atual)}</td>
+            <td>${moeda(inv.valor_aplicado)}</td>
+            <td>${detalhe}</td>
+            <td>${moeda(inv.saldo_atual)}</td>
             <td>${moeda(res)}</td>
             <td><button class="btn-acao btn-editar" data-inv-acao="editar" data-id="${inv.id}">Editar</button><button class="btn-acao btn-excluir" data-inv-acao="excluir" data-id="${inv.id}">Excluir</button></td>
         </tr>`;
-    }).join('') : '<tr><td colspan="6">Nenhum investimento cadastrado.</td></tr>';
+    }).join('') : '<tr><td colspan="7">Nenhum investimento cadastrado.</td></tr>';
 
     document.getElementById('movInvInvestimento').innerHTML = investimentos.map(i=>`<option value="${i.id}">${escaparHtml(i.nome)}</option>`).join('');
     const nomes = Object.fromEntries(investimentos.map(i=>[i.id,i.nome]));
@@ -853,6 +999,158 @@ function renderizarInvestimentos(investimentos, movimentos) {
 function escaparHtml(valor) {
     return String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+// Lógica de formulário em 2 passos para cadastrar investimento
+document.getElementById('btnNovoInvestimentoForm').addEventListener('click', () => {
+    document.getElementById('boxNovoInvestimento').style.display = 'none';
+    document.getElementById('passoSelecaoTipo').style.display = 'block';
+    document.getElementById('passoCamposInvestimento').style.display = 'none';
+});
+
+document.getElementById('btnFecharFormInv').addEventListener('click', cancelarEdicaoInvestimento);
+
+// Clique em cada opção de tipo (CDB, Ações, Tesouro, etc)
+document.querySelectorAll('.btn-tipo-inv').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-tipo-inv').forEach(b => b.classList.remove('selecionado'));
+        btn.classList.add('selecionado');
+
+        tipoInvestimentoSelecionado = btn.dataset.tipo;
+        document.getElementById('lblTipoSelecionado').textContent = tipoInvestimentoSelecionado;
+        
+        document.getElementById('passoCamposInvestimento').style.display = 'block';
+
+        const isRendaFixa = ['CDB', 'RDB', 'Tesouro Direto', 'LCI / LCA', 'Poupança'].includes(tipoInvestimentoSelecionado);
+        const isBolsa = ['Ações', 'Fundos imobiliários (FIIs)', 'ETFs'].includes(tipoInvestimentoSelecionado);
+
+        document.getElementById('boxTipoTaxa').style.display = isRendaFixa ? 'flex' : 'none';
+        document.getElementById('campoTaxaJuros').style.display = isRendaFixa ? 'flex' : 'none';
+        document.getElementById('campoQtdAcoes').style.display = isBolsa ? 'flex' : 'none';
+        document.getElementById('campoPrecoMedio').style.display = isBolsa ? 'flex' : 'none';
+
+        atualizarCamposTipoTaxa();
+
+        if (isBolsa) {
+            document.getElementById('invNome').placeholder = 'Digite o nome ou ticker (ex: Banco do Brasil, PETR4)...';
+        } else {
+            document.getElementById('invNome').placeholder = 'Ex: CDB Banco Inter 110% CDI';
+        }
+
+        document.getElementById('passoCamposInvestimento').scrollIntoView({ behavior: 'smooth' });
+    });
+});
+
+function atualizarCamposTipoTaxa() {
+    const tipoTaxa = document.getElementById('invTipoTaxa').value;
+    const isRendaFixa = ['CDB', 'RDB', 'Tesouro Direto', 'LCI / LCA', 'Poupança'].includes(tipoInvestimentoSelecionado);
+
+    if (isRendaFixa) {
+        if (tipoTaxa === 'cdi') {
+            document.getElementById('lblValorTaxa').textContent = 'Percentual do CDI (%)';
+            document.getElementById('invTaxa').placeholder = 'Ex: 110';
+            document.getElementById('campoCDIBase').style.display = 'flex';
+        } else {
+            document.getElementById('lblValorTaxa').textContent = 'Taxa (% a.a.)';
+            document.getElementById('invTaxa').placeholder = 'Ex: 12.5';
+            document.getElementById('campoCDIBase').style.display = 'none';
+        }
+    }
+}
+
+document.getElementById('invTipoTaxa').addEventListener('change', () => {
+    atualizarCamposTipoTaxa();
+    calcularTotaisInvestimento();
+});
+
+// Autocomplete dinâmico ao digitar o nome da Ação / FII
+const inputInvNome = document.getElementById('invNome');
+const divSugestoes = document.getElementById('sugestoesAcoes');
+
+inputInvNome.addEventListener('input', (e) => {
+    const isBolsa = ['Ações', 'Fundos imobiliários (FIIs)', 'ETFs'].includes(tipoInvestimentoSelecionado);
+    const termo = e.target.value.trim().toLowerCase();
+
+    if (!isBolsa || termo.length < 1) {
+        divSugestoes.style.display = 'none';
+        return;
+    }
+
+    const filtrados = acoesB3Populares.filter(item => 
+        item.ticker.toLowerCase().includes(termo) || item.nome.toLowerCase().includes(termo)
+    );
+
+    if (filtrados.length) {
+        divSugestoes.innerHTML = filtrados.map(item => `
+            <div class="autocomplete-item" data-ticker="${item.ticker}">
+                <strong>${item.ticker}</strong> - ${item.nome}
+            </div>
+        `).join('');
+        divSugestoes.style.display = 'block';
+    } else {
+        divSugestoes.style.display = 'none';
+    }
+});
+
+divSugestoes.addEventListener('click', (e) => {
+    const item = e.target.closest('.autocomplete-item');
+    if (!item) return;
+    inputInvNome.value = item.dataset.ticker;
+    divSugestoes.style.display = 'none';
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#lblInvNome')) divSugestoes.style.display = 'none';
+});
+
+
+// Cálculo automático para Ações (Quantidade x Preço Médio) e Renda Fixa (% a.a. ou % do CDI)
+function calcularTotaisInvestimento() {
+    const isBolsa = ['Ações', 'Fundos imobiliários (FIIs)', 'ETFs'].includes(tipoInvestimentoSelecionado);
+    
+    if (isBolsa) {
+        const qtd = Number(document.getElementById('invQtd').value || 0);
+        const precoMedio = Number(document.getElementById('invPrecoMedio').value || 0);
+        
+        if (qtd > 0 && precoMedio > 0) {
+            const totalAplicado = qtd * precoMedio;
+            document.getElementById('invAplicado').value = totalAplicado.toFixed(2);
+            document.getElementById('invSaldo').value = totalAplicado.toFixed(2);
+        }
+    } else {
+        const aplicado = Number(document.getElementById('invAplicado').value || 0);
+        const tipoTaxa = document.getElementById('invTipoTaxa').value;
+        const valorTaxa = Number(document.getElementById('invTaxa').value || 0);
+        const cdiBase = Number(document.getElementById('invCDIBase').value || 10.75);
+        const dataAplicacao = document.getElementById('invData').value;
+
+        if (aplicado > 0 && valorTaxa > 0 && dataAplicacao) {
+            let taxaAnualEfetiva = valorTaxa;
+
+            // Se for do tipo CDI, calcula a taxa efetiva anual: (% CDI / 100) * CDI Base
+            if (tipoTaxa === 'cdi') {
+                taxaAnualEfetiva = (valorTaxa / 100) * cdiBase;
+            }
+
+            const inicio = new Date(dataAplicacao);
+            const hoje = new Date();
+            const diffAnos = (hoje - inicio) / (1000 * 60 * 60 * 24 * 365.25);
+
+            if (diffAnos > 0) {
+                const montante = aplicado * Math.pow(1 + (taxaAnualEfetiva / 100), diffAnos);
+                document.getElementById('invSaldo').value = montante.toFixed(2);
+            } else {
+                document.getElementById('invSaldo').value = aplicado.toFixed(2);
+            }
+        }
+    }
+}
+
+document.getElementById('invQtd').addEventListener('input', calcularTotaisInvestimento);
+document.getElementById('invPrecoMedio').addEventListener('input', calcularTotaisInvestimento);
+document.getElementById('invAplicado').addEventListener('input', calcularTotaisInvestimento);
+document.getElementById('invTaxa').addEventListener('input', calcularTotaisInvestimento);
+document.getElementById('invCDIBase').addEventListener('input', calcularTotaisInvestimento);
+document.getElementById('invData').addEventListener('change', calcularTotaisInvestimento);
 
 async function salvarMeta() {
     const descricao = document.getElementById('metaDescricao').value.trim();
@@ -883,12 +1181,17 @@ function cancelarEdicaoMeta() {
 async function salvarInvestimento() {
     const nome = document.getElementById('invNome').value.trim();
     const instituicao = document.getElementById('invInstituicao').value.trim();
-    const tipo = document.getElementById('invTipo').value;
+    const tipo = tipoInvestimentoSelecionado || 'Outro';
     const valor_aplicado = Number(document.getElementById('invAplicado').value);
+    const tipo_taxa = document.getElementById('invTipoTaxa').value || 'aa';
+    const taxa_juros = Number(document.getElementById('invTaxa').value || 0);
+    const taxa_cdi_base = Number(document.getElementById('invCDIBase').value || 10.75);
+    const quantidade = Number(document.getElementById('invQtd').value || 1);
     const saldo_atual = Number(document.getElementById('invSaldo').value);
     const data_aplicacao = document.getElementById('invData').value || dataHoje();
     if (!nome || valor_aplicado <= 0 || saldo_atual < 0) return alert('Preencha o ativo e informe valores válidos.');
-    const dados = {nome, instituicao, tipo, valor_aplicado, saldo_atual, data_aplicacao};
+    
+    const dados = {nome, instituicao, tipo, valor_aplicado, tipo_taxa, taxa_juros, taxa_cdi_base, quantidade, saldo_atual, data_aplicacao};
     const resposta = investimentoEditandoId
         ? await supabase.from('investimentos').update(dados).eq('id', investimentoEditandoId)
         : await supabase.from('investimentos').insert([dados]);
@@ -899,16 +1202,81 @@ async function salvarInvestimento() {
 
 function cancelarEdicaoInvestimento() {
     investimentoEditandoId = null;
-    document.getElementById('tituloFormInvestimento').textContent = 'Cadastrar investimento';
-    document.getElementById('btnSalvarInvestimento').textContent = 'Salvar investimento';
-    document.getElementById('btnCancelarInvestimento').style.display = 'none';
+    tipoInvestimentoSelecionado = "";
+    document.getElementById('boxNovoInvestimento').style.display = 'block';
+    document.getElementById('passoSelecaoTipo').style.display = 'none';
+    document.getElementById('passoCamposInvestimento').style.display = 'none';
     document.getElementById('invNome').value = '';
     document.getElementById('invInstituicao').value = '';
-    document.getElementById('invTipo').value = 'CDB';
+    document.getElementById('invQtd').value = '';
+    document.getElementById('invPrecoMedio').value = '';
     document.getElementById('invAplicado').value = '';
+    document.getElementById('invTipoTaxa').value = 'aa';
+    document.getElementById('invTaxa').value = '';
+    document.getElementById('invCDIBase').value = '10.75';
     document.getElementById('invSaldo').value = '';
     document.getElementById('invData').value = dataHoje();
+    document.querySelectorAll('.btn-tipo-inv').forEach(b => b.classList.remove('selecionado'));
 }
+
+// Botão para atualizar cotações de ações via API Brapi (Multiplicando quantidade x preço unitário atual)
+async function atualizarCotacoesB3() {
+    if (!investimentosCache.length) return alert('Nenhum investimento cadastrado.');
+    
+    const API_TOKEN = "vjeX1w31CVy553VToQa99J"; 
+
+    const tickers = investimentosCache
+        .map(i => i.nome.trim().toUpperCase())
+        .filter(nome => /^[A-Z0-9]{4,6}$/.test(nome));
+
+    if (!tickers.length) {
+        return alert('Nenhum ticker válido encontrado nos nomes dos investimentos (ex: BBAS3, PETR4, VALE3).');
+    }
+
+    let atualizados = 0;
+    let erros = 0;
+
+    for (let ticker of tickers) {
+        try {
+            const tokenParam = API_TOKEN ? `?token=${API_TOKEN}` : '';
+            const response = await fetch(`https://brapi.dev/api/quote/${ticker}${tokenParam}`);
+            
+            if (!response.ok) {
+                erros++;
+                continue;
+            }
+
+            const data = await response.json();
+
+            if (data.results && data.results.length) {
+                const item = data.results[0];
+                const inv = investimentosCache.find(i => i.nome.trim().toUpperCase() === item.symbol.toUpperCase());
+
+                if (inv && item.regularMarketPrice) {
+                    const precoUnitarioAtual = item.regularMarketPrice;
+                    const qtd = Number(inv.quantidade || 1);
+                    
+                    const novoSaldo = qtd * precoUnitarioAtual;
+
+                    await supabase.from('investimentos').update({ saldo_atual: Number(novoSaldo) }).eq('id', inv.id);
+                    atualizados++;
+                }
+            }
+        } catch (e) {
+            console.error(`Erro ao buscar cotação de ${ticker}:`, e);
+            erros++;
+        }
+    }
+
+    if (atualizados > 0) {
+        alert(`Sucesso! ${atualizados} ativo(s) atualizado(s) multiplicando a quantidade pelo preço atual da B3.`);
+        await carregarDashboard();
+    } else {
+        alert('Não foi possível obter a cotação no momento.');
+    }
+}
+
+document.getElementById('btnAtualizarCotacoes').addEventListener('click', atualizarCotacoesB3);
 
 async function registrarMovimentoInvestimento() {
     const investimentoId = Number(document.getElementById('movInvInvestimento').value);
@@ -1377,15 +1745,32 @@ document.getElementById('tabelaInvestimentos').addEventListener('click', async e
     if (!inv) return;
     if (btn.dataset.invAcao === 'editar') {
         investimentoEditandoId = inv.id;
-        document.getElementById('tituloFormInvestimento').textContent = 'Editar investimento';
-        document.getElementById('btnSalvarInvestimento').textContent = 'Atualizar investimento';
-        document.getElementById('btnCancelarInvestimento').style.display = 'block';
+        tipoInvestimentoSelecionado = inv.tipo || 'Outro';
+        
+        document.getElementById('boxNovoInvestimento').style.display = 'none';
+        document.getElementById('passoSelecaoTipo').style.display = 'none';
+        document.getElementById('passoCamposInvestimento').style.display = 'block';
+        document.getElementById('lblTipoSelecionado').textContent = tipoInvestimentoSelecionado;
+
         document.getElementById('invNome').value = inv.nome || '';
         document.getElementById('invInstituicao').value = inv.instituicao || '';
-        document.getElementById('invTipo').value = inv.tipo || 'Outro';
+        document.getElementById('invQtd').value = inv.quantidade || '';
         document.getElementById('invAplicado').value = inv.valor_aplicado || 0;
+        document.getElementById('invTipoTaxa').value = inv.tipo_taxa || 'aa';
+        document.getElementById('invTaxa').value = inv.taxa_juros || '';
+        document.getElementById('invCDIBase').value = inv.taxa_cdi_base || 10.75;
         document.getElementById('invSaldo').value = inv.saldo_atual || 0;
         document.getElementById('invData').value = inv.data_aplicacao || '';
+
+        const isRendaFixa = ['CDB', 'RDB', 'Tesouro Direto', 'LCI / LCA', 'Poupança'].includes(tipoInvestimentoSelecionado);
+        const isBolsa = ['Ações', 'Fundos imobiliários (FIIs)', 'ETFs'].includes(tipoInvestimentoSelecionado);
+        document.getElementById('boxTipoTaxa').style.display = isRendaFixa ? 'flex' : 'none';
+        document.getElementById('campoTaxaJuros').style.display = isRendaFixa ? 'flex' : 'none';
+        document.getElementById('campoQtdAcoes').style.display = isBolsa ? 'flex' : 'none';
+        document.getElementById('campoPrecoMedio').style.display = isBolsa ? 'flex' : 'none';
+        
+        atualizarCamposTipoTaxa();
+        document.getElementById('passoCamposInvestimento').scrollIntoView({ behavior: 'smooth' });
     }
     if (btn.dataset.invAcao === 'excluir' && confirm(`Excluir "${inv.nome}" e seu histórico de operações?`)) {
         const {error} = await supabase.from('investimentos').delete().eq('id',inv.id);
